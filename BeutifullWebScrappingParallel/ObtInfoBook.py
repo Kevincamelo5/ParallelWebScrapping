@@ -16,12 +16,15 @@ categories = soup.find('ul', class_='nav nav-list')
 
 #extrae cada clasificacion y enlace
 categories_link = []
+nCatalogo = []
 li_items = soup.find_all('li')
 for li in categories.find_all('li')[1:]:
     link = li.find('a')
     if link:
         catalogo = link.get_text(strip=True) #texto de la categoria
         href = link['href'] #Enlace de la cateroria
-        categories_link.append(href)
+        categories_link.append(href) #se agrega nuevo link al arreglo de enlaces
+        nCatalogo.append(catalogo) # se agrega nuevo nombre al arreglo de catalogos
 
 #ingresar a cada categoria una por una
+print(nCatalogo)
