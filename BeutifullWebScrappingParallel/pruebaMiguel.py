@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from threading import Thread
+import pymysql
 
 # máxima cantidad de revisiones en cada catálogo
 maxiSearch = 20
@@ -14,6 +15,33 @@ soup = BeautifulSoup(response.content, 'html.parser')
 
 # buscar el índice de categorías en la página
 categories = soup.find('ul', class_='nav nav-list')
+
+#conectarse con la base de datos
+def conectar_db():
+    try:
+        conexion = pymysql.connect(
+            host="localhost",
+            user="root",   # Reemplaza con tu usuario de MySQL
+            password="guest",  # Reemplaza con tu contraseña de MySQL
+            database="StoreBooks"
+        )
+        return conexion
+    except pymysql.MySQLError as e:
+        print(f"Error al conectar con la base de datos: {e}")
+        return None
+    
+    # función para insertar datos en la tabla 'estante'
+def insertar_libro_en_estante(conexion, titulo, precio, disponibilidad, genero, enlace):
+    try:
+        with conexion.cursor() as cursor:
+            consulta = """
+                INSERT INTO estante (titulo, precio, disponibilidad, genero, enlace)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(consulta, (titulo, precio, disponibilidad, genero, enlace))
+            conexion.commit()
+    except pymysql.MySQLError as e:
+        print(f"Error al insertar en la tabla estante: {e}")
 
 # extraer cada clasificación y enlace
 categories_link = []
@@ -43,7 +71,7 @@ def inspCategorias(category):
         products = soup.find_all('article', class_='product_pod')
 
         # extraer información de cada producto
-        for product in products[:maxiSearch]:  # limitar por `maxiSearch`
+        for product in products[:maxiSearch]:  # limitar por maxiSearch
             title = product.find('h3').find('a')['title']
             price = product.find('p', class_='price_color').text
             availability = product.find('p', class_='instock availability').text.strip()
